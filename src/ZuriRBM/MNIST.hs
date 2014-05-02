@@ -1,4 +1,4 @@
-module ZuriRBM.MNIST where
+module ZuriRBM.MNIST (MNIST(..)) where
 
 import qualified Data.ByteString.Lazy as BL
 import Data.Binary.Get (getWord32be, isEmpty, runGet)
@@ -8,28 +8,32 @@ import Control.Monad (replicateM, liftM)
 import ZuriRBM.TrainingData
 
 -- | Pure Random Number Generator with Random Monad implementation
---import System.Random.Mersenne.Pure64
---import Control.Monad.Mersenne.Random
+import System.Random.Mersenne.Pure64
+import Control.Monad.Mersenne.Random
 
 data MNIST = MNIST {
     mnistTrainingCases :: [(Image, Label)],
-    mnistTestCases     :: [(Image, Label)] 
+    mnistTestCases     :: [(Image, Label)],
+    mnistRNG           :: PureMT,
+    mnistTrainingCaseIndex :: Int,
+    mnistTestCaseIndex     :: Int
 }
 
 instance Show MNIST where
-  show (MNIST train test)  = "<MNIST 28 x 28, " ++ tr ++  ", " ++ te ++ ">"
+  show (MNIST train test _ tri tei)  = "<MNIST 28 x 28, " ++ tr ++  ", " ++ te ++  ", " ++ show tri ++  ", "  ++ show tei ++ ">"
     where tr = show $ length train
           te = show $ length test
  
 
 mnistFromImagesAndLabels :: (ImageSet, LabelSet) -> (ImageSet, LabelSet) -> MNIST
-mnistFromImagesAndLabels (trainis, trainls) (testis, testls) = MNIST trainingcases testcases 
+mnistFromImagesAndLabels (trainis, trainls) (testis, testls) = MNIST trainingcases testcases rng 0 0
     where trainingcases = zip trainingimages traininglabels
           testcases = zip testimages testlabels
           trainingimages = imageSetImages trainis
           traininglabels = labelSetLabels trainls
           testimages = imageSetImages testis
           testlabels = labelSetLabels testls
+          rng = pureMT 42
 
 readMNISTFromFilePath :: String -> IO MNIST
 readMNISTFromFilePath p = do
@@ -46,25 +50,40 @@ readMNISTFromFilePath p = do
 
     return mnist
 
+instance HasTestcases MNIST where
+    readFromFilePath      = readMNISTFromFilePath
+    numberOfTestCases     (MNIST _  testcs _ _ _) = length testcs
+    numberOfTrainingCases (MNIST traincs _ _ _ _) = length traincs
+    sampleNewTestCase     = sampleBoolifiedTestCase
+    sampleNewTrainingCase = sampleBoolifiedTrainingCase
 
- {-
-instance HasTestcases TestFactory where
-    readFromFilePath      = const . TestFactory $ pureMT 45
-    numberOfTestCases     = const 0
-    numberOfTrainingCases = const 100
-    sampleNewTestCase     = undefined
-    sampleNewTrainingCase = testFactorySampleNewTrainingCase
+sampleBoolifiedTestCase :: MNIST -> (TrainingCase, MNIST)
+sampleBoolifiedTestCase (MNIST trcs tecs rng trix teix) =
+    let (testcase, label) = tecs!!teix
+        (boolvector, rng') = runRandom (mapM sampleWithThreshold testcase) rng
+        sampledcase = (boolvector, Just label)
+        s' = MNIST trcs tecs rng' trix (teix + 1)
+    in  (sampledcase, s')
+
+sampleBoolifiedTrainingCase :: MNIST -> (TrainingCase, MNIST)
+sampleBoolifiedTrainingCase (MNIST trcs tecs rng trix teix) =
+    let (testcase, label) = trcs!!trix
+        (boolvector, rng') = runRandom (mapM sampleWithThreshold testcase) rng
+        sampledcase = (boolvector, Just label)
+        s' = MNIST trcs tecs rng' (trix + 1) teix
+    in  (sampledcase, s')
 
 
-testFactorySampleNewTrainingCase (TestFactory rng) =
-    let (boolvector, rng') = runRandom (sampleBooleanVector 10) rng
-        testcase = (boolvector, Nothing)
-        s' = TestFactory rng'
-    in  (testcase, s')
+sampleWithThreshold :: Word8 -> Rand Bool
+sampleWithThreshold th = do
+  r64 <- getWord64
+  let r8 = fromIntegral $ r64 `mod` 256
+      ordering = compare r8 th
+  case ordering of
+          LT -> getBool >> return True
+          GT -> getBool >> return False
+          EQ -> getBool
 
-sampleBooleanVector :: Int -> Rand [Bool]
-sampleBooleanVector n = replicateM n getBool 
--}
 
 data LabelSet = LabelSet {
    labelSetMagicNumber    :: Int,

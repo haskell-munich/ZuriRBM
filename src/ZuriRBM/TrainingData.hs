@@ -11,7 +11,7 @@ type TrainingCase = (VisibleUnitVector, Maybe Label)
 -- | typeclass defining the functionality of a TestCase Factory!
 class HasTestcases s where
     readFromFilePath      :: String -> IO s         -- ^ read factory state from a file
-    numberOfTestCases     :: s -> Integer           -- ^ magnitude of available test cases
-    numberOfTrainingCases :: s -> Integer           -- ^ magnitude of available training cases
+    numberOfTestCases     :: s -> Int               -- ^ magnitude of available test cases
+    numberOfTrainingCases :: s -> Int               -- ^ magnitude of available training cases
     sampleNewTestCase     :: s -> (TrainingCase, s)
     sampleNewTrainingCase :: s -> (TrainingCase, s) -- ^ sample a new test case (optionally stochastically)
