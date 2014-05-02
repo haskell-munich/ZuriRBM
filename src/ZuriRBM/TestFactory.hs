@@ -11,7 +11,7 @@ import Control.Monad (replicateM)
 data TestFactory = TestFactory PureMT deriving Show
 
 instance HasTestcases TestFactory where
-    readFromFilePath      = return $ const . TestFactory $ pureMT 45
+    readFromFilePath      = const . return . TestFactory $ pureMT 45
     numberOfTestCases     = const 0
     numberOfTrainingCases = const 100
     sampleNewTestCase     = undefined

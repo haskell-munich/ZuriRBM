@@ -3,5 +3,5 @@ module Main where
 import ZuriRBM.TrainingData
 import ZuriRBM.MNIST
 
-main = do mnist <- readMNISTFromFilePath "/Users/halcyon/Documents/Coding/ZuriRBM/data"
+main = do mnist <- readFromFilePath "/Users/halcyon/Documents/Coding/ZuriRBM/data" :: IO MNIST
           putStrLn $ show mnist
