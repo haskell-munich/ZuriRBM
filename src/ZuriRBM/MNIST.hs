@@ -1,7 +1,8 @@
 module ZuriRBM.MNIST (MNIST(..)) where
 
 import qualified Data.ByteString.Lazy as BL
-import Data.Binary.Get (getWord32be, isEmpty, runGet)
+import qualified Data.ByteString as B
+import Data.Binary.Get (getWord32be, getByteString, isEmpty, runGet)
 import Data.Binary
 import Control.Monad (replicateM, liftM)
 
@@ -134,6 +135,6 @@ readImages' :: Int -> Int -> Get [Image]
 readImages' n s = replicateM n $ readImage s
 
 readImage :: Int -> Get Image
-readImage s = replicateM s getWord8
+readImage = (fmap B.unpack) . getByteString
 
 
