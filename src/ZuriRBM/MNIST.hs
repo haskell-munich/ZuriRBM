@@ -13,11 +13,11 @@ import System.Random.Mersenne.Pure64
 import Control.Monad.Mersenne.Random
 
 data MNIST = MNIST {
-    mnistTrainingCases :: [(Image, Label)],
-    mnistTestCases     :: [(Image, Label)],
-    mnistRNG           :: PureMT,
-    mnistTrainingCaseIndex :: Int,
-    mnistTestCaseIndex     :: Int
+    mnistTrainingCases :: ![(Image, Label)],
+    mnistTestCases     :: ![(Image, Label)],
+    mnistRNG           :: !PureMT,
+    mnistTrainingCaseIndex :: !Int,
+    mnistTestCaseIndex     :: !Int
 }
 
 instance Show MNIST where
@@ -87,9 +87,9 @@ sampleWithThreshold th = do
 
 
 data LabelSet = LabelSet {
-   labelSetMagicNumber    :: Int,
-   labelSetNumberOfLabels :: Int,
-   labelSetLabels         :: [String]
+   labelSetMagicNumber    :: !Int,
+   labelSetNumberOfLabels :: !Int,
+   labelSetLabels         :: ![String]
 }
 
 instance Show LabelSet where
@@ -101,11 +101,11 @@ instance Show ImageSet where
    show (ImageSet _ nr r c _) = "<ImageSet " ++ show (nr, r, c) ++ ">"
 
 data ImageSet = ImageSet {
-   imageSetMagicNumber     :: Int,
-   imageSetNumberOfImages  :: Int,
-   imageSetNumberOfRows    :: Int,
-   imageSetNumberOfColumns :: Int,
-   imageSetImages :: [Image]
+   imageSetMagicNumber     :: !Int,
+   imageSetNumberOfImages  :: !Int,
+   imageSetNumberOfRows    :: !Int,
+   imageSetNumberOfColumns :: !Int,
+   imageSetImages :: ![Image]
 }
 
 readLabelSet :: Get LabelSet
@@ -113,7 +113,7 @@ readLabelSet = do
       magicNumber <- fmap fromIntegral getWord32be
       numberOfLabels <- fmap fromIntegral getWord32be
       labels <- readLabels numberOfLabels
-      return $ LabelSet magicNumber numberOfLabels labels
+      return $! LabelSet magicNumber numberOfLabels labels
 
 readLabels :: Int -> Get [String]
 readLabels n = replicateM n readLabel 
@@ -128,8 +128,8 @@ readImageSet = do
     r <- fmap fromIntegral getWord32be
     c <- fmap fromIntegral getWord32be
     let size = r * c
-    images <- (readImages' numberOfImages size)
-    return $ ImageSet magicNumber numberOfImages r c images 
+    images <- readImages' numberOfImages size
+    return $! ImageSet magicNumber numberOfImages r c images 
 
 readImages' :: Int -> Int -> Get [Image]
 readImages' n s = replicateM n $ readImage s
