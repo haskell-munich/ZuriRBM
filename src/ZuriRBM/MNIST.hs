@@ -109,10 +109,10 @@ data ImageSet = ImageSet {
 
 readLabelSet :: Get LabelSet
 readLabelSet = do
-      magicNumber <- getWord32be
-      numberOfLabels <- getWord32be
-      labels <- readLabels (fromIntegral numberOfLabels)
-      return $ LabelSet (fromIntegral magicNumber) (fromIntegral numberOfLabels) labels
+      magicNumber <- fmap fromIntegral getWord32be
+      numberOfLabels <- fmap fromIntegral getWord32be
+      labels <- readLabels numberOfLabels
+      return $ LabelSet magicNumber numberOfLabels labels
 
 readLabels :: Int -> Get [String]
 readLabels n = replicateM n readLabel 
@@ -122,23 +122,12 @@ readLabel = liftM (show) getWord8
 
 readImageSet :: Get ImageSet
 readImageSet = do
-    magicNumber <- getWord32be
-    numberOfImages <- getWord32be
-    r <- getWord32be
-    c <- getWord32be
-
-    let rc = fromIntegral r
-    let cc = fromIntegral c
-    let nrimgs = fromIntegral numberOfImages
-
-    images <- (readImages' nrimgs rc cc)
-
-    return $ ImageSet 
-               (fromIntegral magicNumber)
-               nrimgs
-               rc 
-               cc 
-               images 
+    magicNumber <- fmap fromIntegral getWord32be
+    numberOfImages <- fmap fromIntegral getWord32be
+    r <- fmap fromIntegral getWord32be
+    c <- fmap fromIntegral getWord32be
+    images <- (readImages' numberOfImages r c)
+    return $ ImageSet magicNumber numberOfImages r c images 
 
 readImages' :: Int -> Int -> Int -> Get [Image]
 readImages' n w h = replicateM n $ readImage w h
