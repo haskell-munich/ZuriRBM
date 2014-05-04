@@ -126,13 +126,14 @@ readImageSet = do
     numberOfImages <- fmap fromIntegral getWord32be
     r <- fmap fromIntegral getWord32be
     c <- fmap fromIntegral getWord32be
-    images <- (readImages' numberOfImages r c)
+    let size = r * c
+    images <- (readImages' numberOfImages size)
     return $ ImageSet magicNumber numberOfImages r c images 
 
-readImages' :: Int -> Int -> Int -> Get [Image]
-readImages' n w h = replicateM n $ readImage w h
+readImages' :: Int -> Int -> Get [Image]
+readImages' n s = replicateM n $ readImage s
 
-readImage :: Int -> Int -> Get Image
-readImage w h = replicateM (w * h) getWord8
+readImage :: Int -> Get Image
+readImage s = replicateM s getWord8
 
 
