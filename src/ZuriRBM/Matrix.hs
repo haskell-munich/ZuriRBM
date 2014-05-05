@@ -1,8 +1,9 @@
-module Matrix where
+module ZuriRBM.Matrix where
 
 import Data.List (intercalate)
 import System.IO
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as BS
+import Data.Word (Word8(..))
 
 class Matrix a where
     cons :: (Int, Int) -> a
@@ -14,25 +15,29 @@ data ListMatrix = ListMatrix {
 }
 
 instance Show ListMatrix where
-    show (ListMatrix (n, m) l) = matrixPrint n m l "\n"
+    show (ListMatrix (n, m) l) = matrixPrint ", " "\n" n m l
 
-matrixPrint 0 _ l s = commaSeparatedShow l 
-matrixPrint n m l s = commaSeparatedShow (take m l) ++ s ++ (matrixPrint (n - 1) m (drop m l) s)
-commaSeparatedShow l = intercalate ", " $ foldr ((:) . show) []  l
+matrixPrint :: (Show a) => String -> String -> Int -> Int -> [a] -> String
+matrixPrint sep cr 0 _ l = commaSeparatedShow sep l 
+matrixPrint sep cr n m l = commaSeparatedShow sep (take m l) ++ cr ++ (matrixPrint sep cr (n - 1) m (drop m l))
+commaSeparatedShow sep l = intercalate sep $ foldr ((:) . show) []  l
 
 instance Matrix ListMatrix where
-    cons (n, m) = ListMatrix (n, m) $ take (n * m) $ repeat 1.0 
-    writeToPBM = listMatrixToPBM
+    cons dim@(n, m) = ListMatrix dim $ take (n * m) $ repeat 1.0 
+    writeToPBM = listMatrixToPBM True
 
-listMatrixToPBM :: String -> ListMatrix -> IO ()
-listMatrixToPBM path m = do 
-        f <- openFile path WriteMode  
-        hPutStr f "P5\n" -- Magic number
-        let (w, h) = matrixDimension m
-        hPutStr f $ show h ++ " " ++ show w ++ "\n" -- width x height
+listMatrixToPGM :: Bool -> String -> ListMatrix -> IO ()
+listMatrixToPGM binary path mat = do 
+        let magicnumber = if binary then "P5\n" else "P2\n"
+            (n, m) = matrixDimension mat
+            integermatrixdata = map (floor . (*255.0)) $ matrixData mat :: [Word8]
+        f <- openFile path WriteMode
+        hPutStr f magicnumber
+        hPutStr f $ show n ++ " " ++ show m ++ "\n" -- width x height
         hPutStr f $ "255\n" -- max grayscale value
-        hSetBinaryMode f True
-        BS.hPut f $ foldr (BS.append . BS.pack . show . floor . (*255)) BS.empty $ matrixData m 
-
- 
-
+        if binary then do
+            hSetBinaryMode f True
+            BS.hPut f . BS.pack $ integermatrixdata
+        else do
+            hPutStr f $ matrixPrint " " "\n" n m integermatrixdata 
+        hClose f
