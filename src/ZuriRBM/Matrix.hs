@@ -6,13 +6,12 @@ import qualified Data.ByteString as BS
 import Data.Word (Word8(..))
 
 class Matrix a where
-    cons :: (Int, Int) -> a
+    ones :: (Int, Int) -> a
     writeToPBM :: String -> a -> IO ()
 
 data ListMatrix = ListMatrix {
     matrixDimension :: (Int, Int),
-    matrixData :: [Double]
-}
+    matrixData :: [Double] }
 
 instance Show ListMatrix where
     show (ListMatrix (n, m) l) = matrixPrint ", " "\n" n m l
@@ -23,8 +22,8 @@ matrixPrint sep cr n m l = commaSeparatedShow sep (take m l) ++ cr ++ (matrixPri
 commaSeparatedShow sep l = intercalate sep $ foldr ((:) . show) []  l
 
 instance Matrix ListMatrix where
-    cons dim@(n, m) = ListMatrix dim $ take (n * m) $ repeat 1.0 
-    writeToPBM = listMatrixToPBM True
+    ones dim@(n, m) = ListMatrix dim $ take (n * m) $ repeat 1.0 
+    writeToPBM = listMatrixToPGM True
 
 listMatrixToPGM :: Bool -> String -> ListMatrix -> IO ()
 listMatrixToPGM binary path mat = do 
