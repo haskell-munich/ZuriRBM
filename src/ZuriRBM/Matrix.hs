@@ -5,13 +5,12 @@ import System.IO
 import qualified Data.ByteString.Char8 as BS
 
 class Matrix a where
-    cons :: (Int, Int) -> a
+    ones :: (Int, Int) -> a
     writeToPBM :: String -> a -> IO ()
 
 data ListMatrix = ListMatrix {
     matrixDimension :: (Int, Int),
-    matrixData :: [Double]
-}
+    matrixData :: [Double] }
 
 instance Show ListMatrix where
     show (ListMatrix (n, m) l) = matrixPrint n m l "\n"
@@ -21,7 +20,7 @@ matrixPrint n m l s = commaSeparatedShow (take m l) ++ s ++ (matrixPrint (n - 1)
 commaSeparatedShow l = intercalate ", " $ foldr ((:) . show) []  l
 
 instance Matrix ListMatrix where
-    cons (n, m) = ListMatrix (n, m) $ take (n * m) $ repeat 1.0 
+    ones (n, m) = ListMatrix (n, m) $ take (n * m) $ repeat 1.0 
     writeToPBM = listMatrixToPBM
 
 listMatrixToPBM :: String -> ListMatrix -> IO ()
