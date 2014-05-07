@@ -36,11 +36,13 @@ main = do
 
   simpleHTTP nullConf $ do
     txt <- liftIO $ B.readFile $ buildRoute "html/index.html"
+    showFilterMatrices <- liftIO $ B.readFile $ buildRoute "html/showFilterMatrices.html"
 
     liftIO (putStrLn "Hi there!")
 
 
     msum [ dir "index.html" $ return (setMime "text/html" txt),
+           dir "showFilterMatrices.html" $ return (setMime "text/html" showFilterMatrices),
            dir "d3.v3.min.js" $ ok (setMime "text/javascript" d3),
            dir "jquery-1.11.0.min.js" $ ok (setMime "text/javascript" jq),
            dir "html" $ serveDirectory DisableBrowsing [] $ buildRoute "html",
