@@ -3,9 +3,11 @@ module ZuriRBM.TrainingData (
 		HasTestcases(readFromFilePath, numberOfTestCases, numberOfTrainingCases, sampleNewTestCase, sampleNewTrainingCase)
 	) where
 
+import Data.Packed.Vector(Vector(..))
+
 type Label = String
 -- | Boolean Vector as input for the visible units
-type VisibleUnitVector = [Bool]
+type VisibleUnitVector = Vector Double
 type TrainingCase = (VisibleUnitVector, Maybe Label)
 
 -- | typeclass defining the functionality of a TestCase Factory!

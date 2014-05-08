@@ -4,6 +4,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString as B
 import Data.Binary.Get (getWord32be, getByteString, isEmpty, runGet)
 import Data.Binary
+import Data.Packed.Vector(Vector(..), fromList)
+import Foreign.Marshal.Utils(fromBool)
 import Control.Monad (replicateM, liftM)
 
 import ZuriRBM.TrainingData
@@ -62,7 +64,7 @@ sampleBoolifiedTestCase :: MNIST -> (TrainingCase, MNIST)
 sampleBoolifiedTestCase (MNIST trcs tecs rng trix teix) =
     let (testcase, label) = tecs!!teix
         (boolvector, rng') = runRandom (mapM sampleWithThreshold testcase) rng
-        sampledcase = (boolvector, Just label)
+        sampledcase = (fromList $ map fromBool boolvector, Just label)
         s' = MNIST trcs tecs rng' trix (teix + 1)
     in  (sampledcase, s')
 
@@ -70,7 +72,7 @@ sampleBoolifiedTrainingCase :: MNIST -> (TrainingCase, MNIST)
 sampleBoolifiedTrainingCase (MNIST trcs tecs rng trix teix) =
     let (testcase, label) = trcs!!trix
         (boolvector, rng') = runRandom (mapM sampleWithThreshold testcase) rng
-        sampledcase = (boolvector, Just label)
+        sampledcase = (fromList $ map fromBool boolvector, Just label)
         s' = MNIST trcs tecs rng' (trix + 1) teix
     in  (sampledcase, s')
 

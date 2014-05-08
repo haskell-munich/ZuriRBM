@@ -9,5 +9,8 @@ contrastiveDivergence = undefined
 
 cdStep :: WeightMatrix -> StateVector -> StateVector -> ?
 
-coactivityMatrix :: (Matrix a) => StateVector -> StateVector -> a
-coactivityMatrix a b = outer and a b
+type StateVector = Vector Double
+type CoactivityMatrix = Matrix Double
+
+coactivityMatrix :: StateVector -> StateVector -> CoactivityMatrix
+coactivityMatrix a b = outer a b
